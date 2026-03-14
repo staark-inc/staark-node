@@ -5,20 +5,21 @@ Official Node.js SDK for the [Staark API](https://api.staark-app.cloud).
 ## Installation
 
 ```bash
-npm install @staark-dev/staark-node
+npm install @staark/node
 ```
 
 ## Setup
 
 ```typescript
-import Staark from '@staark-dev/staark-node';
+import Staark from '@staark/node';
 
-const staark = new Staark.default({
-  apiKey: process.env.STAARK_API_KEY!,
+const staark = new Staark({
+  apiKey: process.env.STAARK_API_KEY,
 });
 ```
 
-Or with a `.env` file:
+Add your API key in a `.env` file:
+
 ```bash
 STAARK_API_KEY=sk_live_staark_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
@@ -31,7 +32,7 @@ STAARK_API_KEY=sk_live_staark_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 ```typescript
 // Register
-const { data: user } = await staark.auth.register({
+const { data } = await staark.auth.register({
   email:           'ion@example.com',
   password:        'parola123',
   confirmPassword: 'parola123',
@@ -46,10 +47,14 @@ const { accessToken, refreshToken } = await staark.auth.login({
 });
 
 // Refresh tokens
-const { accessToken: newToken } = await staark.auth.refresh(refreshToken);
+const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
+  await staark.auth.refresh(accessToken, refreshToken);
 
 // Logout
-await staark.auth.logout(refreshToken);
+await staark.auth.logout(accessToken, refreshToken);
+
+// Verify email
+await staark.auth.verifyEmail(token);
 
 // Forgot password
 await staark.auth.forgotPassword('ion@example.com');
@@ -79,7 +84,7 @@ const { data: project } = await staark.projects.create({
 // Get
 const { data: project } = await staark.projects.get('proj_abc123');
 
-// Update
+// Update (PATCH — partial update)
 await staark.projects.update('proj_abc123', { status: 'completed' });
 
 // Delete
@@ -90,9 +95,11 @@ await staark.projects.delete('proj_abc123');
 
 ```typescript
 // List tasks in a project
-const { data: tasks } = await staark.tasks.list('proj_abc123', {
+const { data: tasks, meta } = await staark.tasks.list('proj_abc123', {
   priority: 'high',
   status:   'in_progress',
+  limit:    10,
+  page:     1,
 });
 
 // Create
@@ -102,7 +109,10 @@ const { data: task } = await staark.tasks.create('proj_abc123', {
   tags:     ['design', 'ux'],
 });
 
-// Update
+// Get
+const { data: task } = await staark.tasks.get('task_xyz');
+
+// Update (PATCH — partial update)
 await staark.tasks.update('task_xyz', { status: 'done' });
 
 // Delete
@@ -131,15 +141,19 @@ await staark.keys.revoke(keyId, 'usr_123');
 ### Status
 
 ```typescript
+// Current status
 const status = await staark.status.get();
-console.log(status.services); // array of ServiceStatus
+console.log(status.services); // ServiceStatus[]
 
+// Uptime history (default: last 90 days)
 const history = await staark.status.history(30); // last 30 days
 ```
 
 ---
 
-## Error handling
+## Error Handling
+
+All errors thrown by the SDK are instances of `StaarkError`:
 
 ```typescript
 import Staark, { StaarkError } from '@staark/node';
@@ -148,9 +162,64 @@ try {
   await staark.projects.get('proj_nonexistent');
 } catch (err) {
   if (err instanceof StaarkError) {
-    console.log(err.code);    // 'NOT_FOUND'
-    console.log(err.status);  // 404
-    console.log(err.message); // 'Project not found'
+    console.log(err.code);    // e.g. 'NOT_FOUND', 'UNAUTHORIZED', 'PARSE_ERROR'
+    console.log(err.status);  // HTTP status code, e.g. 404
+    console.log(err.message); // Human-readable message
+    console.log(err.field);   // Field name for validation errors (optional)
   }
 }
 ```
+
+| `code`        | `status` | Description                                      |
+|---------------|----------|--------------------------------------------------|
+| `NOT_FOUND`   | 404      | Resource not found                               |
+| `UNAUTHORIZED`| 401      | Invalid or missing API key                       |
+| `FORBIDDEN`   | 403      | Insufficient permissions                         |
+| `PARSE_ERROR` | any      | Server returned a non-JSON response (e.g. 502)   |
+
+---
+
+## TypeScript
+
+The SDK is written in TypeScript and exports all types:
+
+```typescript
+import type {
+  Project, ProjectStatus, ProjectVisibility,
+  Task, TaskStatus, TaskPriority,
+  ApiKey, Plan,
+  User, LoginResult, RefreshResult,
+  ApiResponse, PaginatedResponse,
+  StaarkConfig,
+} from '@staark/node';
+```
+
+---
+
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Build (CJS + ESM + types)
+npm run build
+
+# Watch mode
+npm run dev
+
+# Type check
+npm run lint
+
+# Run tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+```
+
+---
+
+## License
+
+MIT
