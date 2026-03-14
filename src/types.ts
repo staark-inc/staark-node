@@ -175,6 +175,50 @@ export interface UpdateTaskParams {
   tags?:        string[];
 }
 
+// ─── OAuth ─────────────────────────────────────────────────────────────────
+
+export type OAuthProvider = 'github' | 'google' | 'discord' | 'microsoft';
+
+export interface OAuthAuthorizeParams {
+  redirect_uri: string;
+  scope?: string[];
+  state?: string;
+}
+
+export interface OAuthAuthorizeResult {
+  url: string;
+  state: string;
+}
+
+export interface ConnectedProvider {
+  provider: OAuthProvider;
+  provider_user_id: string;
+  email: string | null;
+  connected_at: number;
+}
+
+export interface OAuthSetupCard {
+  provider: OAuthProvider;
+  task_id: string;
+  title: string;
+  created: boolean;
+}
+
+// ─── Custom Auth ────────────────────────────────────────────────────────────
+
+export interface CustomAuthMethod {
+  id: string;
+  name: string;
+  handler_url: string;
+  active: boolean;
+  created_at: number;
+}
+
+export interface RegisterCustomMethodParams {
+  name: string;
+  handler_url: string;
+}
+
 // ─── Status ────────────────────────────────────────────────────────────────
 
 export interface ServiceStatus {

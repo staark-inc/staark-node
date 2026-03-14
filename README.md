@@ -63,6 +63,62 @@ await staark.auth.forgotPassword('ion@example.com');
 await staark.auth.resetPassword(token, 'newParola123', 'newParola123');
 ```
 
+### Social Login (OAuth)
+
+```typescript
+// Obtine URL-ul de redirect catre provider
+const { data } = await staark.auth.oauth.authorize('github', {
+  redirect_uri: 'https://myapp.com/callback',
+  scope: ['user:email'],
+});
+window.location.href = data.url;
+
+// Schimba codul OAuth primit in callback cu tokens Staark
+const { accessToken, refreshToken } = await staark.auth.oauth.callback(
+  'github',
+  req.query.code,
+  req.query.state,
+);
+
+// Listeaza providerii conectati
+const { data: providers } = await staark.auth.oauth.connected(accessToken);
+
+// Deconecteaza un provider
+await staark.auth.oauth.disconnect(accessToken, 'github');
+
+// Creeaza automat carduri in proiect pentru configurarea OAuth
+const { data: cards } = await staark.auth.oauth.setupProjectCards(
+  accessToken,
+  'proj_abc123',
+  ['github', 'google', 'discord'],
+);
+// Genereaza task-uri: "Setup GitHub OAuth", "Setup Google OAuth", etc.
+```
+
+Provideri disponibili: `github` | `google` | `discord` | `microsoft`
+
+### Custom Login Method
+
+```typescript
+// Inregistreaza o metoda custom
+const { data: method } = await staark.auth.custom.register(accessToken, {
+  name:        'magic-link',
+  handler_url: 'https://myapp.com/auth/magic-link',
+});
+
+// Login cu metoda custom
+const { accessToken, refreshToken } = await staark.auth.custom.login(
+  'magic-link',
+  { email: 'ion@example.com' },
+);
+
+// Listeaza metodele inregistrate
+const { data: methods } = await staark.auth.custom.list(accessToken);
+
+// Sterge o metoda
+await staark.auth.custom.delete(accessToken, 'magic-link');
+```
+
 ### Projects
 
 ```typescript

@@ -81,6 +81,19 @@ export class HttpClient {
     return this.parse(res);
   }
 
+  async getWithToken<T>(path: string, token: string, query?: Record<string, string | number | undefined>): Promise<T> {
+    const url = new URL(`${this.baseUrl}${path}`);
+    if (query) {
+      for (const [k, v] of Object.entries(query)) {
+        if (v !== undefined) url.searchParams.set(k, String(v));
+      }
+    }
+    const res = await fetch(url.toString(), {
+      headers: this.headers({ Authorization: `Bearer ${token}` }),
+    });
+    return this.parse<T>(res);
+  }
+
   async patch<T>(path: string, body?: unknown): Promise<T> {
     const res = await fetch(`${this.baseUrl}${path}`, {
       method:  'PATCH',

@@ -6,9 +6,17 @@ import type {
   RefreshResult,
   ApiResponse,
 } from '../types.js';
+import { OAuthResource } from './oauth.js';
+import { CustomAuthResource } from './custom-auth.js';
 
 export class AuthResource {
-  constructor(private http: HttpClient) {}
+  readonly oauth: OAuthResource;
+  readonly custom: CustomAuthResource;
+
+  constructor(private http: HttpClient) {
+    this.oauth = new OAuthResource(http);
+    this.custom = new CustomAuthResource(http);
+  }
 
   /** Inregistrare cont nou — public, fara API key */
   register(params: RegisterParams): Promise<ApiResponse<{ user: object; verifyToken?: string }>> {
