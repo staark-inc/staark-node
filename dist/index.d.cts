@@ -18,7 +18,10 @@ declare class HttpClient {
     private publicHeaders;
     get<T>(path: string, query?: Record<string, string | number | undefined>): Promise<T>;
     post<T>(path: string, body?: unknown): Promise<T>;
+    /** POST cu Authorization: Bearer <token> suprascris — pentru logout/refresh */
+    postWithToken<T>(path: string, body?: unknown, token?: string): Promise<T>;
     postPublic<T>(path: string, body?: unknown): Promise<T>;
+    patch<T>(path: string, body?: unknown): Promise<T>;
     put<T>(path: string, body?: unknown): Promise<T>;
     delete<T>(path: string, body?: unknown): Promise<T>;
     private parse;
@@ -197,28 +200,36 @@ interface StatusHistoryResult {
 declare class AuthResource {
     private http;
     constructor(http: HttpClient);
-    /** Înregistrare cont nou — public, fără API key */
+    /** Inregistrare cont nou — public, fara API key */
     register(params: RegisterParams): Promise<ApiResponse<{
         user: object;
         verifyToken?: string;
     }>>;
-    /** Login — public, fără API key */
+    /** Login — public, fara API key */
     login(params: LoginParams): Promise<LoginResult>;
-    /** Logout — necesită Bearer token (access token) */
-    logout(refreshToken: string): Promise<ApiResponse<{
+    /**
+     * Logout — necesita Bearer token (access token al utilizatorului, nu API key)
+     * @param accessToken  Token-ul de acces primit la login
+     * @param refreshToken Token-ul de refresh care va fi invalidat
+     */
+    logout(accessToken: string, refreshToken: string): Promise<ApiResponse<{
         ok: boolean;
     }>>;
-    /** Refresh access token — necesită Bearer token */
-    refresh(refreshToken: string): Promise<RefreshResult>;
-    /** Verificare email — public, fără API key */
+    /**
+     * Refresh access token — necesita Bearer token (access token al utilizatorului)
+     * @param accessToken  Token-ul de acces (poate fi expirat)
+     * @param refreshToken Token-ul de refresh
+     */
+    refresh(accessToken: string, refreshToken: string): Promise<RefreshResult>;
+    /** Verificare email — public, fara API key */
     verifyEmail(token: string): Promise<ApiResponse<{
         verified: boolean;
     }>>;
-    /** Forgot password — public, fără API key */
+    /** Forgot password — public, fara API key */
     forgotPassword(email: string): Promise<ApiResponse<{
         sent: boolean;
     }>>;
-    /** Reset password — public, fără API key */
+    /** Reset password — public, fara API key */
     resetPassword(token: string, password: string, confirmPassword: string): Promise<ApiResponse<{
         reset: boolean;
     }>>;
@@ -252,6 +263,11 @@ declare class KeysResource {
     private http;
     constructor(http: HttpClient);
     generate(params: GenerateKeyParams): Promise<ApiResponse<GeneratedKey>>;
+    /**
+     * Listeaza cheile API ale unui utilizator.
+     * URL: GET /keys/:userId
+     * Nota: Pattern conventional alternativ ar fi GET /users/:userId/keys sau GET /keys?user_id=xxx
+     */
     list(userId: string): Promise<ApiResponse<ApiKey[]>>;
     revoke(id: number, userId: string): Promise<ApiResponse<{
         revoked: boolean;

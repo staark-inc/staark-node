@@ -27,11 +27,14 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url":  "git+https://github.com/staark-dev/staark-node.git"
+    "url":  "git+https://github.com/staark-inc/staark-node.git"
   },
-  "homepage": "https://github.com/staark-dev/staark-node#readme",
+  "homepage": "https://github.com/staark-inc/staark-node#readme",
   "bugs": {
-    "url": "https://github.com/staark-dev/staark-node/issues"
+    "url": "https://github.com/staark-inc/staark-node/issues"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   },
   "devDependencies": {
     "tsup":       "^8.2.4",

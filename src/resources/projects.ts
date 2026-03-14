@@ -12,7 +12,7 @@ export class ProjectsResource {
   constructor(private http: HttpClient) {}
 
   list(params: ListProjectsParams): Promise<PaginatedResponse<Project>> {
-    return this.http.get('/projects', params as Record<string, string | number | undefined>);
+    return this.http.get('/projects', params as unknown as Record<string, string | number | undefined>);
   }
 
   create(params: CreateProjectParams): Promise<ApiResponse<Project>> {

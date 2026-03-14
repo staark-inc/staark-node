@@ -46,10 +46,27 @@ var HttpClient = class {
     });
     return this.parse(res);
   }
+  /** POST cu Authorization: Bearer <token> suprascris — pentru logout/refresh */
+  async postWithToken(path, body, token) {
+    const res = await fetch(`${this.baseUrl}${path}`, {
+      method: "POST",
+      headers: token ? this.headers({ Authorization: `Bearer ${token}` }) : this.headers(),
+      body: body ? JSON.stringify(body) : void 0
+    });
+    return this.parse(res);
+  }
   async postPublic(path, body) {
     const res = await fetch(`${this.baseUrl}${path}`, {
       method: "POST",
       headers: this.publicHeaders(),
+      body: body ? JSON.stringify(body) : void 0
+    });
+    return this.parse(res);
+  }
+  async patch(path, body) {
+    const res = await fetch(`${this.baseUrl}${path}`, {
+      method: "PATCH",
+      headers: this.headers(),
       body: body ? JSON.stringify(body) : void 0
     });
     return this.parse(res);
@@ -71,8 +88,19 @@ var HttpClient = class {
     return this.parse(res);
   }
   async parse(res) {
-    const data = await res.json();
-    if (!res.ok) throw new StaarkError(data.error, res.status);
+    let data;
+    try {
+      data = await res.json();
+    } catch {
+      throw new StaarkError(
+        { code: "PARSE_ERROR", message: `Server returned non-JSON response (HTTP ${res.status})` },
+        res.status
+      );
+    }
+    if (!res.ok) {
+      const err = data.error ?? { code: "UNKNOWN_ERROR", message: "Unknown error" };
+      throw new StaarkError(err, res.status);
+    }
     return data;
   }
 };
@@ -82,31 +110,39 @@ var AuthResource = class {
   constructor(http) {
     this.http = http;
   }
-  /** Înregistrare cont nou — public, fără API key */
+  /** Inregistrare cont nou — public, fara API key */
   register(params) {
     return this.http.postPublic("/auth/register", params);
   }
-  /** Login — public, fără API key */
+  /** Login — public, fara API key */
   login(params) {
     return this.http.postPublic("/auth/login", params);
   }
-  /** Logout — necesită Bearer token (access token) */
-  logout(refreshToken) {
-    return this.http.post("/auth/logout", { refreshToken });
+  /**
+   * Logout — necesita Bearer token (access token al utilizatorului, nu API key)
+   * @param accessToken  Token-ul de acces primit la login
+   * @param refreshToken Token-ul de refresh care va fi invalidat
+   */
+  logout(accessToken, refreshToken) {
+    return this.http.postWithToken("/auth/logout", { refreshToken }, accessToken);
   }
-  /** Refresh access token — necesită Bearer token */
-  refresh(refreshToken) {
-    return this.http.post("/auth/refresh", { refreshToken });
+  /**
+   * Refresh access token — necesita Bearer token (access token al utilizatorului)
+   * @param accessToken  Token-ul de acces (poate fi expirat)
+   * @param refreshToken Token-ul de refresh
+   */
+  refresh(accessToken, refreshToken) {
+    return this.http.postWithToken("/auth/refresh", { refreshToken }, accessToken);
   }
-  /** Verificare email — public, fără API key */
+  /** Verificare email — public, fara API key */
   verifyEmail(token) {
     return this.http.postPublic("/auth/verify-email", { token });
   }
-  /** Forgot password — public, fără API key */
+  /** Forgot password — public, fara API key */
   forgotPassword(email) {
     return this.http.postPublic("/auth/forgot-password", { email });
   }
-  /** Reset password — public, fără API key */
+  /** Reset password — public, fara API key */
   resetPassword(token, password, confirmPassword) {
     return this.http.postPublic("/auth/reset-password", { token, password, confirmPassword });
   }
@@ -127,7 +163,7 @@ var ProjectsResource = class {
     return this.http.get(`/projects/${id}`);
   }
   update(id, params) {
-    return this.http.put(`/projects/${id}`, params);
+    return this.http.patch(`/projects/${id}`, params);
   }
   delete(id) {
     return this.http.delete(`/projects/${id}`);
@@ -149,7 +185,7 @@ var TasksResource = class {
     return this.http.get(`/tasks/${id}`);
   }
   update(id, params) {
-    return this.http.put(`/tasks/${id}`, params);
+    return this.http.patch(`/tasks/${id}`, params);
   }
   delete(id) {
     return this.http.delete(`/tasks/${id}`);
@@ -164,6 +200,11 @@ var KeysResource = class {
   generate(params) {
     return this.http.post("/keys", params);
   }
+  /**
+   * Listeaza cheile API ale unui utilizator.
+   * URL: GET /keys/:userId
+   * Nota: Pattern conventional alternativ ar fi GET /users/:userId/keys sau GET /keys?user_id=xxx
+   */
   list(userId) {
     return this.http.get(`/keys/${userId}`);
   }
