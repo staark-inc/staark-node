@@ -1,0 +1,41 @@
+{
+  "name": "@staark/node",
+  "version": "2.0.0",
+  "description": "Official Node.js SDK for the Staark API",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types":   "./dist/index.d.ts",
+      "import":  "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build":          "tsup src/index.ts --format cjs,esm --dts --clean",
+    "build:cdn":      "tsup src/index.ts --format iife --globalName Staark --outDir dist",
+    "dev":            "tsup src/index.ts --format cjs,esm --dts --watch",
+    "lint":           "tsc --noEmit",
+    "test":           "vitest run",
+    "test:watch":     "vitest",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": ["staark", "api", "sdk", "project-management"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url":  "git+https://github.com/staark-dev/staark-node.git"
+  },
+  "homepage": "https://github.com/staark-dev/staark-node#readme",
+  "bugs": {
+    "url": "https://github.com/staark-dev/staark-node/issues"
+  },
+  "devDependencies": {
+    "tsup":       "^8.2.4",
+    "typescript": "^5.6.3",
+    "vitest":     "^2.1.0"
+  }
+}
