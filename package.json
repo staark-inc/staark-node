@@ -1,5 +1,5 @@
 {
-  "name": "@staark/node",
+  "name": "@staark-inc/node",
   "version": "2.0.0",
   "description": "Official Node.js SDK for the Staark API",
   "type": "module",

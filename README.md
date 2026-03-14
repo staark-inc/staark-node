@@ -1,17 +1,17 @@
-# @staark/node
+# @staark-inc/node
 
 Official Node.js SDK for the [Staark API](https://api.staark-app.cloud).
 
 ## Installation
 
 ```bash
-npm install @staark/node
+npm install @staark-inc/node
 ```
 
 ## Setup
 
 ```typescript
-import Staark from '@staark/node';
+import Staark from '@staark-inc/node';
 
 const staark = new Staark({
   apiKey: process.env.STAARK_API_KEY,
@@ -156,7 +156,7 @@ const history = await staark.status.history(30); // last 30 days
 All errors thrown by the SDK are instances of `StaarkError`:
 
 ```typescript
-import Staark, { StaarkError } from '@staark/node';
+import Staark, { StaarkError } from '@staark-inc/node';
 
 try {
   await staark.projects.get('proj_nonexistent');
@@ -191,7 +191,7 @@ import type {
   User, LoginResult, RefreshResult,
   ApiResponse, PaginatedResponse,
   StaarkConfig,
-} from '@staark/node';
+} from '@staark-inc/node';
 ```
 
 ---
